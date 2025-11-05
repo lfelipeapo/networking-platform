@@ -1,65 +1,93 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4 py-12">
+      <div className="w-full max-w-4xl text-center">
+        <h1 className="mb-4 text-5xl font-bold text-gray-900">
+          Plataforma de Gestão para Grupos de Networking
+        </h1>
+        <p className="mb-12 text-xl text-gray-600">
+          Digitalize e otimize a gestão dos membros e suas interações
+        </p>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manifestar Interesse</CardTitle>
+              <CardDescription>
+                Deseja participar do nosso grupo de networking?
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/intencao">
+                <Button className="w-full">Enviar Intenção</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Área Administrativa</CardTitle>
+              <CardDescription>
+                Gerencie intenções e membros do grupo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/admin/intencoes">
+                <Button variant="secondary" className="w-full">
+                  Acessar Admin
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="mt-12 rounded-lg bg-white p-8 shadow-md">
+          <h2 className="mb-4 text-2xl font-bold text-gray-900">
+            Funcionalidades
+          </h2>
+          <div className="grid gap-4 text-left md:grid-cols-3">
+            <div>
+              <h3 className="mb-2 font-semibold text-gray-900">
+                Gestão de Membros
+              </h3>
+              <p className="text-sm text-gray-600">
+                Formulário de intenção, aprovação administrativa e cadastro
+                completo
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-2 font-semibold text-gray-900">
+                Sistema de Indicações
+              </h3>
+              <p className="text-sm text-gray-600">
+                Crie e gerencie indicações de negócios entre membros
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-2 font-semibold text-gray-900">
+                Acompanhamento
+              </h3>
+              <p className="text-sm text-gray-600">
+                Monitore o status das indicações e interações do grupo
+              </p>
+            </div>
+          </div>
         </div>
-      </main>
+
+        <div className="mt-8 text-sm text-gray-500">
+          <p>Desenvolvido com Next.js, React, TypeScript e PostgreSQL</p>
+        </div>
+      </div>
     </div>
   );
 }

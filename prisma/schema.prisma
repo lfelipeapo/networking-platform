@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Intencao {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  empresa   String
+  motivacao String
+  status    String   @default("PENDENTE") // PENDENTE, APROVADO, RECUSADO
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("intencoes")
+}
+
+model Membro {
+  id         String   @id @default(cuid())
+  nome       String
+  email      String   @unique
+  empresa    String
+  telefone   String?
+  cargo      String?
+  token      String   @unique
+  tokenUsado Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  indicacoesFeitas    Indicacao[] @relation("IndicadorMembro")
+  indicacoesRecebidas Indicacao[] @relation("IndicadoMembro")
+
+  @@map("membros")
+}
+
+model Indicacao {
+  id             String   @id @default(cuid())
+  indicadorId    String
+  indicadoId     String
+  empresaContato String
+  descricao      String
+  status         String   @default("NOVA") // NOVA, EM_CONTATO, FECHADA, RECUSADA
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  indicador Membro @relation("IndicadorMembro", fields: [indicadorId], references: [id], onDelete: Cascade)
+  indicado  Membro @relation("IndicadoMembro", fields: [indicadoId], references: [id], onDelete: Cascade)
+
+  @@map("indicacoes")
+}
