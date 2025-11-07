@@ -178,6 +178,45 @@ O pipeline executa os seguintes jobs:
 3.  **Type Check**: Verifica a tipagem de todo o projeto com o compilador TypeScript.
 4.  **Build**: Compila a aplicação para produção para garantir que não há erros de build.
 
+## Comunicação e Engajamento
+
+Aviso {id, titulo, conteudo, publicoAlvo(enum: TODOS|ADMIN|MEMBROS), publicadoEm}
+
+Endpoints:
+
+POST /api/avisos (admin)
+
+GET /api/avisos?audiencia=MEMBROS
+
+Check-in {id, membroId, reuniaoId, status(enum: PRESENTE|FALTOU), timestamp}
+
+POST /api/checkins (membro)
+
+GET /api/checkins?reuniaoId=... (admin)
+
+## Acompanhamento e Performance
+
+Reuniao1a1 {id, membroAId, membroBId, data, objetivo, notas}
+
+POST /api/1a1 | GET /api/1a1?membroId=...
+
+## Dashboards/Relatórios (visão)
+
+KPIs: membros ativos, indicações por mês, “obrigados” por mês
+
+Estratégia: endpoints agregadores (GET /api/metrics?periodo=mensal), consultas Prisma (GROUP BY) ou materialização simples.
+
+## Financeiro
+
+Mensalidade {id, membroId, competencia(YYYY-MM), valor, status(enum: PENDENTE|PAGO|ATRASADO), vencimento}
+
+POST /api/mensalidades (admin gera)
+
+PATCH /api/mensalidades/:id (atualiza status)
+
+GET /api/mensalidades?membroId=...&periodo=...
+
+
 ## 👨‍💻 Desenvolvedor
 
 -   **Luiz Felipe Apolinário**
