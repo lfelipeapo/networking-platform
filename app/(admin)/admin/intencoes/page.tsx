@@ -21,11 +21,20 @@ interface Intencao {
   createdAt: string;
 }
 
+interface ApprovalResult {
+  conviteLink: string;
+  membro: {
+    nome: string;
+    email: string;
+  };
+}
+
 export default function AdminIntencoesPage() {
   const [intencoes, setIntencoes] = useState<Intencao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [approvalResult, setApprovalResult] = useState<ApprovalResult | null>(null);
 
   const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || 'admin_secret_key_123';
 
@@ -59,6 +68,7 @@ export default function AdminIntencoesPage() {
 
   const handleUpdateStatus = async (id: string, status: string) => {
     setProcessingId(id);
+    setApprovalResult(null);
 
     try {
       const response = await fetch(`/api/intencoes/${id}`, {
@@ -74,12 +84,27 @@ export default function AdminIntencoesPage() {
         throw new Error('Erro ao atualizar status');
       }
 
+      const result = await response.json();
+
+      // Se foi aprovado, mostrar o link de convite
+      if (status === 'APROVADO' && result.data.conviteLink) {
+        setApprovalResult({
+          conviteLink: result.data.conviteLink,
+          membro: result.data.membro,
+        });
+      }
+
       await fetchIntencoes();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Erro ao atualizar status');
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert('Link copiado para a área de transferência!');
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -127,6 +152,54 @@ export default function AdminIntencoesPage() {
             Aprove ou recuse as solicitações de participação
           </p>
         </div>
+
+        {/* Modal de Aprovação com Link de Convite */}
+        {approvalResult && (
+          <Card className="mb-8 border-green-500 bg-green-50">
+            <CardHeader>
+              <CardTitle className="text-green-700">
+                ✅ Intenção Aprovada!
+              </CardTitle>
+              <CardDescription>
+                Convite gerado para {approvalResult.membro.nome} ({approvalResult.membro.email})
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="mb-2 text-sm font-medium text-gray-700">
+                    Link de Cadastro Completo:
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={approvalResult.conviteLink}
+                      readOnly
+                      className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    />
+                    <Button
+                      onClick={() => copyToClipboard(approvalResult.conviteLink)}
+                      variant="secondary"
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600">
+                  📧 <strong>Instruções:</strong> Envie este link para o email do membro aprovado.
+                  Ele poderá acessar a página de cadastro completo usando este link único.
+                </p>
+                <Button
+                  onClick={() => setApprovalResult(null)}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  Fechar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {intencoes.length === 0 ? (
           <Card>

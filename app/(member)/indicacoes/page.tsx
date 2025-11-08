@@ -1,8 +1,8 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useMember } from '@/lib/contexts/MemberContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
@@ -33,9 +33,8 @@ interface Indicacao {
 }
 
 function IndicacoesContent() {
-  const searchParams = useSearchParams();
-  const membroId = searchParams.get('membroId') || '';
-
+  const { member, isLoading: memberLoading, logout } = useMember();
+  const router = useRouter();
   const [tipo, setTipo] = useState<'feitas' | 'recebidas'>('feitas');
   const [indicacoes, setIndicacoes] = useState<Indicacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,26 +42,37 @@ function IndicacoesContent() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (membroId) {
+    if (!memberLoading && !member) {
+      router.push('/login');
+    }
+  }, [member, memberLoading, router]);
+
+  useEffect(() => {
+    if (member) {
       fetchIndicacoes();
     }
-  }, [membroId, tipo]);
+  }, [member, tipo]);
 
   const fetchIndicacoes = async () => {
+    if (!member) return;
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/indicacoes?membroId=${membroId}&tipo=${tipo}`
-      );
+      const endpoint =
+        tipo === 'feitas'
+          ? `/api/indicacoes?indicadorId=${member.id}`
+          : `/api/indicacoes?indicadoId=${member.id}`;
+
+      const response = await fetch(endpoint);
 
       if (!response.ok) {
         throw new Error('Erro ao carregar indicações');
       }
 
       const result = await response.json();
-      setIndicacoes(result.data || []);
+      setIndicacoes(result.data.indicacoes || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
@@ -96,95 +106,106 @@ function IndicacoesContent() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'NOVA':
-        return 'nova';
-      case 'EM_CONTATO':
-        return 'em_contato';
-      case 'FECHADA':
-        return 'fechada';
-      case 'RECUSADA':
-        return 'recusada';
+      case 'PENDENTE':
+        return 'pendente';
+      case 'EM_ANDAMENTO':
+        return 'andamento';
+      case 'CONCLUIDA':
+        return 'aprovado';
+      case 'CANCELADA':
+        return 'recusado';
       default:
-        return 'nova';
+        return 'default';
     }
   };
 
-  if (!membroId) {
+  if (memberLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-red-600">Erro</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700">
-              ID do membro não fornecido. Por favor, acesse esta página através
-              do sistema.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-lg text-gray-600">Carregando...</p>
       </div>
     );
   }
 
+  if (!member) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">
+              Logado como: <strong>{member.nome}</strong> ({member.email})
+            </p>
+          </div>
+          <Button onClick={logout} variant="secondary" size="sm">
+            Sair
+          </Button>
+        </div>
+
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold text-gray-900">
               Minhas Indicações
             </h1>
             <p className="mt-2 text-lg text-gray-600">
-              Gerencie suas indicações de negócios
+              Gerencie suas indicações de negócio
             </p>
           </div>
-          <Link href={`/indicacoes/nova?membroId=${membroId}`}>
-            <Button>Nova Indicação</Button>
-          </Link>
+          <Button onClick={() => router.push('/indicacoes/nova')}>
+            Nova Indicação
+          </Button>
         </div>
 
-        <div className="mb-6 flex gap-4">
+        <div className="mb-6 flex gap-2">
           <Button
-            variant={tipo === 'feitas' ? 'primary' : 'outline'}
             onClick={() => setTipo('feitas')}
+            variant={tipo === 'feitas' ? 'primary' : 'secondary'}
           >
             Indicações Feitas
           </Button>
           <Button
-            variant={tipo === 'recebidas' ? 'primary' : 'outline'}
             onClick={() => setTipo('recebidas')}
+            variant={tipo === 'recebidas' ? 'primary' : 'secondary'}
           >
             Indicações Recebidas
           </Button>
         </div>
 
-        {isLoading && (
-          <div className="text-center">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
             <p className="text-gray-600">Carregando indicações...</p>
           </div>
-        )}
-
-        {error && (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="pt-6">
-              <p className="text-red-600">{error}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading && !error && indicacoes.length === 0 && (
+        ) : error ? (
           <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-gray-600">
-                Nenhuma indicação encontrada.
-              </p>
+            <CardContent className="py-12 text-center">
+              <p className="text-red-600">{error}</p>
+              <Button onClick={fetchIndicacoes} className="mt-4">
+                Tentar Novamente
+              </Button>
             </CardContent>
           </Card>
-        )}
-
-        {!isLoading && !error && indicacoes.length > 0 && (
-          <div className="grid gap-4">
+        ) : indicacoes.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-gray-600">
+                Nenhuma indicação {tipo === 'feitas' ? 'feita' : 'recebida'}{' '}
+                ainda.
+              </p>
+              {tipo === 'feitas' && (
+                <Button
+                  onClick={() => router.push('/indicacoes/nova')}
+                  className="mt-4"
+                >
+                  Criar Primeira Indicação
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
             {indicacoes.map((indicacao) => (
               <Card key={indicacao.id}>
                 <CardHeader>
@@ -192,9 +213,17 @@ function IndicacoesContent() {
                     <div>
                       <CardTitle>{indicacao.empresaContato}</CardTitle>
                       <CardDescription>
-                        {tipo === 'feitas'
-                          ? `Para: ${indicacao.indicado.nome} (${indicacao.indicado.empresa})`
-                          : `De: ${indicacao.indicador.nome} (${indicacao.indicador.empresa})`}
+                        {tipo === 'feitas' ? (
+                          <>
+                            Indicado para: {indicacao.indicado.nome} (
+                            {indicacao.indicado.empresa})
+                          </>
+                        ) : (
+                          <>
+                            Indicado por: {indicacao.indicador.nome} (
+                            {indicacao.indicador.empresa})
+                          </>
+                        )}
                       </CardDescription>
                     </div>
                     <Badge variant={getStatusBadgeVariant(indicacao.status)}>
@@ -203,34 +232,41 @@ function IndicacoesContent() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="mb-4 text-gray-700">{indicacao.descricao}</p>
-                  <p className="mb-4 text-sm text-gray-500">
-                    Criada em:{' '}
-                    {new Date(indicacao.createdAt).toLocaleDateString('pt-BR')}
-                  </p>
-
-                  {tipo === 'recebidas' && indicacao.status !== 'FECHADA' && (
-                    <div className="flex gap-2">
-                      <select
-                        className="rounded border border-gray-300 px-3 py-2"
-                        onChange={(e) =>
-                          handleUpdateStatus(indicacao.id, e.target.value)
-                        }
-                        disabled={updatingId === indicacao.id}
-                        value={indicacao.status}
-                      >
-                        <option value="NOVA">Nova</option>
-                        <option value="EM_CONTATO">Em Contato</option>
-                        <option value="FECHADA">Fechada</option>
-                        <option value="RECUSADA">Recusada</option>
-                      </select>
-                      {updatingId === indicacao.id && (
-                        <span className="text-sm text-gray-500">
-                          Atualizando...
-                        </span>
-                      )}
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        Descrição:
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {indicacao.descricao}
+                      </p>
                     </div>
-                  )}
+
+                    {tipo === 'recebidas' &&
+                      indicacao.status !== 'CANCELADA' &&
+                      indicacao.status !== 'CONCLUIDA' && (
+                        <div className="flex gap-2">
+                          <select
+                            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                            onChange={(e) =>
+                              handleUpdateStatus(indicacao.id, e.target.value)
+                            }
+                            disabled={updatingId === indicacao.id}
+                            value={indicacao.status}
+                          >
+                            <option value="PENDENTE">Pendente</option>
+                            <option value="EM_ANDAMENTO">Em Andamento</option>
+                            <option value="CONCLUIDA">Concluída</option>
+                            <option value="CANCELADA">Cancelada</option>
+                          </select>
+                        </div>
+                      )}
+
+                    <p className="text-xs text-gray-500">
+                      Criada em:{' '}
+                      {new Date(indicacao.createdAt).toLocaleString('pt-BR')}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -243,7 +279,13 @@ function IndicacoesContent() {
 
 export default function IndicacoesPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Carregando...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          Carregando...
+        </div>
+      }
+    >
       <IndicacoesContent />
     </Suspense>
   );

@@ -1,7 +1,8 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useMember } from '@/lib/contexts/MemberContext';
 import { IndicacaoForm } from '@/components/forms/IndicacaoForm';
 import {
   Card,
@@ -10,32 +11,53 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 function NovaIndicacaoContent() {
-  const searchParams = useSearchParams();
-  const indicadorId = searchParams.get('membroId') || '';
+  const { member, isLoading, logout } = useMember();
+  const router = useRouter();
 
-  if (!indicadorId) {
+  useEffect(() => {
+    if (!isLoading && !member) {
+      router.push('/login');
+    }
+  }, [member, isLoading, router]);
+
+  if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-red-600">Erro</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700">
-              ID do membro não fornecido. Por favor, acesse esta página através
-              do sistema.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-lg text-gray-600">Carregando...</p>
       </div>
     );
+  }
+
+  if (!member) {
+    return null;
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">
+              Logado como: <strong>{member.nome}</strong> ({member.email})
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => router.push('/indicacoes')}
+              variant="secondary"
+              size="sm"
+            >
+              Minhas Indicações
+            </Button>
+            <Button onClick={logout} variant="secondary" size="sm">
+              Sair
+            </Button>
+          </div>
+        </div>
+
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-900">Nova Indicação</h1>
           <p className="mt-2 text-lg text-gray-600">
@@ -52,7 +74,7 @@ function NovaIndicacaoContent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <IndicacaoForm indicadorId={indicadorId} />
+            <IndicacaoForm indicadorId={member.id} />
           </CardContent>
         </Card>
       </div>
@@ -62,7 +84,13 @@ function NovaIndicacaoContent() {
 
 export default function NovaIndicacaoPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Carregando...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          Carregando...
+        </div>
+      }
+    >
       <NovaIndicacaoContent />
     </Suspense>
   );

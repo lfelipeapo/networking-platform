@@ -81,11 +81,48 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/membros
- * Lista todos os membros ativos (rota protegida - admin)
+ * Lista todos os membros ativos (admin) OU busca membro por email (login)
  */
 export async function GET(request: NextRequest) {
   try {
-    // Validar chave administrativa
+    const searchParams = request.nextUrl.searchParams;
+    const email = searchParams.get('email');
+
+    // Se tem email, é login de membro
+    if (email) {
+      const membro = await prisma.membro.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          empresa: true,
+          cargo: true,
+          telefone: true,
+          tokenUsado: true,
+        },
+      });
+
+      if (!membro) {
+        return errorResponse(
+          ErrorCodes.NOT_FOUND,
+          'Membro não encontrado',
+          404
+        );
+      }
+
+      if (!membro.tokenUsado) {
+        return errorResponse(
+          ErrorCodes.VALIDATION_ERROR,
+          'Você ainda não completou seu cadastro',
+          400
+        );
+      }
+
+      return successResponse(membro, 'Membro encontrado');
+    }
+
+    // Caso contrário, é listagem admin
     const adminKey = request.headers.get('X-Admin-Key');
     if (adminKey !== process.env.ADMIN_KEY) {
       return errorResponse(
@@ -95,7 +132,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Buscar membros com cadastro completo
     const membros = await prisma.membro.findMany({
       where: { tokenUsado: true },
       orderBy: { createdAt: 'desc' },
@@ -111,7 +147,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse(membros);
   } catch (error) {
-    console.error('Erro ao listar membros:', error);
+    console.error('Erro ao buscar/listar membros:', error);
     return errorResponse(
       ErrorCodes.INTERNAL_ERROR,
       'Erro interno do servidor',

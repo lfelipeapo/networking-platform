@@ -7,6 +7,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     | 'pendente'
     | 'aprovado'
     | 'recusado'
+    | 'andamento'
     | 'nova'
     | 'em_contato'
     | 'fechada'
@@ -20,6 +21,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       pendente: 'bg-yellow-100 text-yellow-800',
       aprovado: 'bg-green-100 text-green-800',
       recusado: 'bg-red-100 text-red-800',
+      andamento: 'bg-blue-100 text-blue-800',
       nova: 'bg-blue-100 text-blue-800',
       em_contato: 'bg-purple-100 text-purple-800',
       fechada: 'bg-green-100 text-green-800',

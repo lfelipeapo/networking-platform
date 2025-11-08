@@ -51,6 +51,22 @@ export default function HomePage() {
           </Card>
         </div>
 
+        <div className="mt-6">
+          <Card className="border-2 border-green-500">
+            <CardHeader>
+              <CardTitle>Área do Membro</CardTitle>
+              <CardDescription>
+                Acesse o sistema de indicações de negócios
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/login">
+                <Button className="w-full">Fazer Login</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="mt-12 rounded-lg bg-white p-8 shadow-md">
           <h2 className="mb-4 text-2xl font-bold text-gray-900">
             Funcionalidades
