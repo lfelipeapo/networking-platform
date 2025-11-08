@@ -24,7 +24,7 @@ export const indicacaoCreateSchema = z.object({
  */
 export const indicacaoUpdateStatusSchema = z.object({
   status: z.enum(['NOVA', 'EM_CONTATO', 'FECHADA', 'RECUSADA'], {
-    errorMap: () => ({ message: 'Status inválido' }),
+    message: 'Status inválido',
   }),
 });
 

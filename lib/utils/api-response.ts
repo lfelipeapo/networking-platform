@@ -25,14 +25,16 @@ export function successResponse<T>(
   message?: string,
   status: number = 200
 ): NextResponse<ApiSuccessResponse<T>> {
-  return NextResponse.json(
-    {
-      success: true,
-      data,
-      ...(message && { message }),
-    },
-    { status }
-  );
+  const response: ApiSuccessResponse<T> = {
+    success: true,
+    data,
+  };
+  
+  if (message) {
+    response.message = message;
+  }
+  
+  return NextResponse.json(response, { status });
 }
 
 /**
@@ -44,14 +46,19 @@ export function errorResponse(
   status: number = 400,
   details?: unknown
 ): NextResponse<ApiErrorResponse> {
+  const error: ApiErrorResponse['error'] = {
+    code,
+    message,
+  };
+  
+  if (details !== undefined) {
+    error.details = details;
+  }
+  
   return NextResponse.json(
     {
       success: false,
-      error: {
-        code,
-        message,
-        ...(details && { details }),
-      },
+      error,
     },
     { status }
   );

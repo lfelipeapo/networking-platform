@@ -27,7 +27,7 @@ export const intencaoCreateSchema = z.object({
  */
 export const intencaoUpdateStatusSchema = z.object({
   status: z.enum(['PENDENTE', 'APROVADO', 'RECUSADO'], {
-    errorMap: () => ({ message: 'Status inválido' }),
+    message: 'Status inválido',
   }),
 });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +32,7 @@ interface Indicacao {
   };
 }
 
-export default function IndicacoesPage() {
+function IndicacoesContent() {
   const searchParams = useSearchParams();
   const membroId = searchParams.get('membroId') || '';
 
@@ -105,22 +105,7 @@ export default function IndicacoesPage() {
       case 'RECUSADA':
         return 'recusada';
       default:
-        return 'default';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'NOVA':
-        return 'Nova';
-      case 'EM_CONTATO':
-        return 'Em Contato';
-      case 'FECHADA':
-        return 'Fechada';
-      case 'RECUSADA':
-        return 'Recusada';
-      default:
-        return status;
+        return 'nova';
     }
   };
 
@@ -144,14 +129,14 @@ export default function IndicacoesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold text-gray-900">
               Minhas Indicações
             </h1>
             <p className="mt-2 text-lg text-gray-600">
-              Gerencie suas indicações de negócio
+              Gerencie suas indicações de negócios
             </p>
           </div>
           <Link href={`/indicacoes/nova?membroId=${membroId}`}>
@@ -159,47 +144,47 @@ export default function IndicacoesPage() {
           </Link>
         </div>
 
-        <div className="mb-6">
-          <div className="flex gap-2">
-            <Button
-              variant={tipo === 'feitas' ? 'primary' : 'outline'}
-              onClick={() => setTipo('feitas')}
-            >
-              Indicações Feitas
-            </Button>
-            <Button
-              variant={tipo === 'recebidas' ? 'primary' : 'outline'}
-              onClick={() => setTipo('recebidas')}
-            >
-              Indicações Recebidas
-            </Button>
-          </div>
+        <div className="mb-6 flex gap-4">
+          <Button
+            variant={tipo === 'feitas' ? 'primary' : 'outline'}
+            onClick={() => setTipo('feitas')}
+          >
+            Indicações Feitas
+          </Button>
+          <Button
+            variant={tipo === 'recebidas' ? 'primary' : 'outline'}
+            onClick={() => setTipo('recebidas')}
+          >
+            Indicações Recebidas
+          </Button>
         </div>
 
-        {isLoading ? (
+        {isLoading && (
           <div className="text-center">
-            <p className="text-lg text-gray-600">Carregando...</p>
+            <p className="text-gray-600">Carregando indicações...</p>
           </div>
-        ) : error ? (
-          <Card>
-            <CardContent className="py-12 text-center">
+        )}
+
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
               <p className="text-red-600">{error}</p>
-              <Button onClick={fetchIndicacoes} className="mt-4">
-                Tentar Novamente
-              </Button>
             </CardContent>
           </Card>
-        ) : indicacoes.length === 0 ? (
+        )}
+
+        {!isLoading && !error && indicacoes.length === 0 && (
           <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-gray-600">
-                Nenhuma indicação {tipo === 'feitas' ? 'feita' : 'recebida'} no
-                momento.
+            <CardContent className="pt-6">
+              <p className="text-center text-gray-600">
+                Nenhuma indicação encontrada.
               </p>
             </CardContent>
           </Card>
-        ) : (
-          <div className="space-y-4">
+        )}
+
+        {!isLoading && !error && indicacoes.length > 0 && (
+          <div className="grid gap-4">
             {indicacoes.map((indicacao) => (
               <Card key={indicacao.id}>
                 <CardHeader>
@@ -213,45 +198,39 @@ export default function IndicacoesPage() {
                       </CardDescription>
                     </div>
                     <Badge variant={getStatusBadgeVariant(indicacao.status)}>
-                      {getStatusLabel(indicacao.status)}
+                      {indicacao.status.replace('_', ' ')}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Descrição:
-                      </p>
-                      <p className="mt-1 text-sm text-gray-600">
-                        {indicacao.descricao}
-                      </p>
-                    </div>
+                  <p className="mb-4 text-gray-700">{indicacao.descricao}</p>
+                  <p className="mb-4 text-sm text-gray-500">
+                    Criada em:{' '}
+                    {new Date(indicacao.createdAt).toLocaleDateString('pt-BR')}
+                  </p>
 
-                    {tipo === 'recebidas' &&
-                      indicacao.status !== 'FECHADA' &&
-                      indicacao.status !== 'RECUSADA' && (
-                        <div className="flex flex-wrap gap-2">
-                          <Select
-                            value={indicacao.status}
-                            onChange={(e) =>
-                              handleUpdateStatus(indicacao.id, e.target.value)
-                            }
-                            disabled={updatingId === indicacao.id}
-                          >
-                            <option value="NOVA">Nova</option>
-                            <option value="EM_CONTATO">Em Contato</option>
-                            <option value="FECHADA">Fechada</option>
-                            <option value="RECUSADA">Recusada</option>
-                          </Select>
-                        </div>
+                  {tipo === 'recebidas' && indicacao.status !== 'FECHADA' && (
+                    <div className="flex gap-2">
+                      <select
+                        className="rounded border border-gray-300 px-3 py-2"
+                        onChange={(e) =>
+                          handleUpdateStatus(indicacao.id, e.target.value)
+                        }
+                        disabled={updatingId === indicacao.id}
+                        value={indicacao.status}
+                      >
+                        <option value="NOVA">Nova</option>
+                        <option value="EM_CONTATO">Em Contato</option>
+                        <option value="FECHADA">Fechada</option>
+                        <option value="RECUSADA">Recusada</option>
+                      </select>
+                      {updatingId === indicacao.id && (
+                        <span className="text-sm text-gray-500">
+                          Atualizando...
+                        </span>
                       )}
-
-                    <p className="text-xs text-gray-500">
-                      Criada em:{' '}
-                      {new Date(indicacao.createdAt).toLocaleString('pt-BR')}
-                    </p>
-                  </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -259,5 +238,13 @@ export default function IndicacoesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function IndicacoesPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Carregando...</div>}>
+      <IndicacoesContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { IndicacaoForm } from '@/components/forms/IndicacaoForm';
 import {
@@ -10,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-export default function NovaIndicacaoPage() {
+function NovaIndicacaoContent() {
   const searchParams = useSearchParams();
   const indicadorId = searchParams.get('membroId') || '';
 
@@ -56,5 +57,13 @@ export default function NovaIndicacaoPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function NovaIndicacaoPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Carregando...</div>}>
+      <NovaIndicacaoContent />
+    </Suspense>
   );
 }
