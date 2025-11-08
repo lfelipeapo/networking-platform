@@ -1,0 +1,41 @@
+erDiagram
+    INTENCAO ||--o| MEMBRO : "aprovada_gera"
+    MEMBRO ||--o{ INDICACAO : "faz"
+    MEMBRO ||--o{ INDICACAO : "recebe"
+    
+    INTENCAO {
+        string id PK
+        string nome
+        string email
+        string empresa
+        string motivacao
+        enum status "PENDENTE, APROVADO, RECUSADO"
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    MEMBRO {
+        string id PK
+        string nome
+        string email
+        string empresa
+        string telefone
+        string cargo
+        string linkedin
+        string token UK "token único de cadastro"
+        boolean ativo
+        datetime createdAt
+        datetime updatedAt
+    }
+    
+    INDICACAO {
+        string id PK
+        string membroOrigemId FK
+        string membroDestinoId FK
+        string nomeCliente
+        string contatoCliente
+        string descricaoNegocio
+        enum status "PENDENTE, EM_ANDAMENTO, CONCLUIDA, CANCELADA"
+        datetime createdAt
+        datetime updatedAt
+    }
