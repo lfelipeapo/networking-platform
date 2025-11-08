@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { membroCreateSchema, type MembroCreateInput } from '@/lib/validations/membro';
@@ -28,12 +29,14 @@ export default function CadastroPage({
 }: {
   params: Promise<{ token: string }>;
 }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const [membroInfo, setMembroInfo] = useState<MembroInfo | null>(null);
   const [isValidating, setIsValidating] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(5);
 
   const {
     register,
@@ -122,6 +125,23 @@ export default function CadastroPage({
     );
   }
 
+  useEffect(() => {
+    if (submitSuccess) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            router.push('/login');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [submitSuccess, router]);
+
   if (submitSuccess) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -129,11 +149,24 @@ export default function CadastroPage({
           <CardHeader>
             <CardTitle className="text-green-600">Sucesso! 🎉</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <p className="text-gray-700">
               Seu cadastro foi completado com sucesso! Bem-vindo ao grupo de
               networking.
             </p>
+            <div className="rounded-md bg-green-50 p-4 text-center">
+              <p className="text-sm text-green-800">
+                Você será redirecionado para o login em{' '}
+                <span className="font-bold text-green-900">{countdown}</span>{' '}
+                segundo{countdown !== 1 ? 's' : ''}...
+              </p>
+            </div>
+            <Button
+              onClick={() => router.push('/login')}
+              className="w-full"
+            >
+              Ir para Login Agora
+            </Button>
           </CardContent>
         </Card>
       </div>
