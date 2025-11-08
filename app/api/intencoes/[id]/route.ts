@@ -18,17 +18,6 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-
-    // Validar chave administrativa
-    const adminKey = request.headers.get('X-Admin-Key');
-    if (adminKey !== process.env.ADMIN_KEY) {
-      return errorResponse(
-        ErrorCodes.UNAUTHORIZED,
-        'Acesso não autorizado',
-        401
-      );
-    }
-
     const body = await request.json();
 
     // Validar dados de entrada
