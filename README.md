@@ -69,13 +69,13 @@ docker run --name networking-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=p
 
 ### 5. Aplicar as Migrations do Prisma
 
-Para aplicar as migrations que já existem no projeto, use o comando `deploy`:
+Com o banco de dados rodando, aplique as migrations para criar as tabelas:
 
 ```bash
 npx prisma migrate deploy
 ```
 
-**Nota**: Não use `npm run prisma:migrate` ou `prisma migrate dev`, pois esses comandos são para criar *novas* migrations durante o desenvolvimento, e não para aplicar as existentes em um setup inicial.
+Este comando irá executar os arquivos de migração existentes na pasta `prisma/migrations`.
 
 ### 6. Rodar a Aplicação
 
