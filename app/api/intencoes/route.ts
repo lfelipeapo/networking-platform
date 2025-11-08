@@ -72,16 +72,6 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Validar chave administrativa
-    const adminKey = request.headers.get('X-Admin-Key');
-    if (adminKey !== process.env.ADMIN_KEY) {
-      return errorResponse(
-        ErrorCodes.UNAUTHORIZED,
-        'Acesso não autorizado',
-        401
-      );
-    }
-
     // Obter parâmetros de query
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');

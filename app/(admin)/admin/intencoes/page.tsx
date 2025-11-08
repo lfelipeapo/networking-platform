@@ -39,15 +39,8 @@ export default function AdminIntencoesPage() {
   const [approvalResult, setApprovalResult] = useState<ApprovalResult | null>(null);
 
   useEffect(() => {
-    // Verificar autenticação
-    const adminToken = localStorage.getItem('adminToken');
-    if (!adminToken) {
-      router.push('/admin/login');
-      return;
-    }
-
     fetchIntencoes();
-  }, [router]);
+  }, []);
 
   const fetchIntencoes = async () => {
     setIsLoading(true);
