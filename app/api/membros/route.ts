@@ -123,15 +123,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Caso contrário, é listagem admin
-    const adminKey = request.headers.get('X-Admin-Key');
-    if (adminKey !== process.env.ADMIN_KEY) {
-      return errorResponse(
-        ErrorCodes.UNAUTHORIZED,
-        'Acesso não autorizado',
-        401
-      );
-    }
-
     const membros = await prisma.membro.findMany({
       where: { tokenUsado: true },
       orderBy: { createdAt: 'desc' },

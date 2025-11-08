@@ -30,8 +30,6 @@ export function IndicacaoForm({ indicadorId, onSuccess }: IndicacaoFormProps) {
     text: string;
   } | null>(null);
 
-  const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || 'admin_secret_key_123';
-
   const {
     register,
     handleSubmit,
@@ -50,11 +48,7 @@ export function IndicacaoForm({ indicadorId, onSuccess }: IndicacaoFormProps) {
 
   const fetchMembros = async () => {
     try {
-      const response = await fetch('/api/membros', {
-        headers: {
-          'X-Admin-Key': adminKey,
-        },
-      });
+      const response = await fetch('/api/membros');
 
       if (response.ok) {
         const result = await response.json();
