@@ -103,13 +103,13 @@ function IndicacoesContent() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'PENDENTE':
+      case 'NOVA':
         return 'pendente';
-      case 'EM_ANDAMENTO':
+      case 'EM_CONTATO':
         return 'andamento';
-      case 'CONCLUIDA':
+      case 'FECHADA':
         return 'aprovado';
-      case 'CANCELADA':
+      case 'RECUSADA':
         return 'recusado';
       default:
         return 'default';
@@ -240,8 +240,8 @@ function IndicacoesContent() {
                     </div>
 
                     {tipo === 'recebidas' &&
-                      indicacao.status !== 'CANCELADA' &&
-                      indicacao.status !== 'CONCLUIDA' && (
+                      indicacao.status !== 'RECUSADA' &&
+                      indicacao.status !== 'FECHADA' && (
                         <div className="flex gap-2">
                           <select
                             className="rounded-md border border-gray-300 px-3 py-2 text-sm"
@@ -251,10 +251,10 @@ function IndicacoesContent() {
                             disabled={updatingId === indicacao.id}
                             value={indicacao.status}
                           >
-                            <option value="PENDENTE">Pendente</option>
-                            <option value="EM_ANDAMENTO">Em Andamento</option>
-                            <option value="CONCLUIDA">Concluída</option>
-                            <option value="CANCELADA">Cancelada</option>
+                            <option value="NOVA">Nova</option>
+                            <option value="EM_CONTATO">Em Contato</option>
+                            <option value="FECHADA">Fechada</option>
+                            <option value="RECUSADA">Recusada</option>
                           </select>
                         </div>
                       )}
