@@ -130,7 +130,6 @@ export default function CadastroPage({
       const timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
-            clearInterval(timer);
             router.push('/login');
             return 0;
           }
