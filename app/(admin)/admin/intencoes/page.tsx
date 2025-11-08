@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,35 +31,37 @@ interface ApprovalResult {
 }
 
 export default function AdminIntencoesPage() {
+  const router = useRouter();
   const [intencoes, setIntencoes] = useState<Intencao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [approvalResult, setApprovalResult] = useState<ApprovalResult | null>(null);
 
-  const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || 'admin_secret_key_123';
-
   useEffect(() => {
+    // Verificar autenticação
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      router.push('/admin/login');
+      return;
+    }
+
     fetchIntencoes();
-  }, []);
+  }, [router]);
 
   const fetchIntencoes = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/intencoes', {
-        headers: {
-          'X-Admin-Key': adminKey,
-        },
-      });
+      const response = await fetch('/api/intencoes');
 
       if (!response.ok) {
         throw new Error('Erro ao carregar intenções');
       }
 
       const result = await response.json();
-      setIntencoes(result.data.intencoes || []);
+      setIntencoes(result.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
@@ -75,7 +78,6 @@ export default function AdminIntencoesPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'X-Admin-Key': adminKey,
         },
         body: JSON.stringify({ status }),
       });
@@ -87,10 +89,15 @@ export default function AdminIntencoesPage() {
       const result = await response.json();
 
       // Se foi aprovado, mostrar o link de convite
-      if (status === 'APROVADO' && result.data.conviteLink) {
+      if (status === 'APROVADO' && result.data.membro) {
+        const baseUrl = window.location.origin;
+        const conviteLink = `${baseUrl}/cadastro/${result.data.membro.token}`;
         setApprovalResult({
-          conviteLink: result.data.conviteLink,
-          membro: result.data.membro,
+          conviteLink,
+          membro: {
+            nome: result.data.intencao.nome,
+            email: result.data.intencao.email,
+          },
         });
       }
 
@@ -100,6 +107,11 @@ export default function AdminIntencoesPage() {
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    router.push('/admin/login');
   };
 
   const copyToClipboard = (text: string) => {
@@ -128,29 +140,21 @@ export default function AdminIntencoesPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-red-600">{error}</p>
-          <Button onClick={fetchIntencoes} className="mt-4">
-            Tentar Novamente
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">
-            Gestão de Intenções
-          </h1>
-          <p className="mt-2 text-lg text-gray-600">
-            Aprove ou recuse as solicitações de participação
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">
+              Gestão de Intenções
+            </h1>
+            <p className="mt-2 text-lg text-gray-600">
+              Aprove ou recuse as solicitações de participação
+            </p>
+          </div>
+          <Button onClick={handleLogout} variant="secondary">
+            Sair
+          </Button>
         </div>
 
         {/* Modal de Aprovação com Link de Convite */}
@@ -186,8 +190,9 @@ export default function AdminIntencoesPage() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-600">
-                  📧 <strong>Instruções:</strong> Envie este link para o email do membro aprovado.
-                  Ele poderá acessar a página de cadastro completo usando este link único.
+                  📧 <strong>Simulação de envio de email:</strong> Em produção, este link seria
+                  enviado automaticamente para {approvalResult.membro.email}. Por enquanto, copie e
+                  envie manualmente.
                 </p>
                 <Button
                   onClick={() => setApprovalResult(null)}
@@ -201,7 +206,16 @@ export default function AdminIntencoesPage() {
           </Card>
         )}
 
-        {intencoes.length === 0 ? (
+        {error ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-red-600">{error}</p>
+              <Button onClick={fetchIntencoes} className="mt-4">
+                Tentar Novamente
+              </Button>
+            </CardContent>
+          </Card>
+        ) : intencoes.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-gray-600">
@@ -243,19 +257,16 @@ export default function AdminIntencoesPage() {
                           onClick={() =>
                             handleUpdateStatus(intencao.id, 'APROVADO')
                           }
-                          isLoading={processingId === intencao.id}
                           disabled={processingId !== null}
-                          variant="primary"
                         >
-                          Aprovar
+                          {processingId === intencao.id ? 'Processando...' : 'Aprovar'}
                         </Button>
                         <Button
                           onClick={() =>
                             handleUpdateStatus(intencao.id, 'RECUSADO')
                           }
-                          isLoading={processingId === intencao.id}
                           disabled={processingId !== null}
-                          variant="danger"
+                          variant="secondary"
                         >
                           Recusar
                         </Button>

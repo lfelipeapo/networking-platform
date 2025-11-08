@@ -60,10 +60,7 @@ function IndicacoesContent() {
     setError(null);
 
     try {
-      const endpoint =
-        tipo === 'feitas'
-          ? `/api/indicacoes?indicadorId=${member.id}`
-          : `/api/indicacoes?indicadoId=${member.id}`;
+      const endpoint = `/api/indicacoes?membroId=${member.id}&tipo=${tipo}`;
 
       const response = await fetch(endpoint);
 
@@ -72,7 +69,7 @@ function IndicacoesContent() {
       }
 
       const result = await response.json();
-      setIndicacoes(result.data.indicacoes || []);
+      setIndicacoes(result.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {

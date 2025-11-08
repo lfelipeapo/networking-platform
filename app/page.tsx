@@ -42,7 +42,7 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/admin/intencoes">
+              <Link href="/admin/login">
                 <Button variant="secondary" className="w-full">
                   Acessar Admin
                 </Button>
