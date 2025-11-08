@@ -53,6 +53,22 @@ export default function CadastroPage({
     validateToken();
   }, []);
 
+  useEffect(() => {
+    if (submitSuccess) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            router.push('/login');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [submitSuccess, router]);
+
   const validateToken = async () => {
     setIsValidating(true);
     setValidationError(null);
@@ -124,22 +140,6 @@ export default function CadastroPage({
       </div>
     );
   }
-
-  useEffect(() => {
-    if (submitSuccess) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            router.push('/login');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [submitSuccess, router]);
 
   if (submitSuccess) {
     return (
