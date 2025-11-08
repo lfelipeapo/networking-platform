@@ -92,15 +92,7 @@ export async function GET(request: NextRequest) {
       prisma.intencao.count({ where }),
     ]);
 
-    return successResponse({
-      intencoes,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+    return successResponse(intencoes);
   } catch (error) {
     console.error('Erro ao listar intenções:', error);
     return errorResponse(
